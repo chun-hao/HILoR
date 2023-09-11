@@ -176,5 +176,12 @@ HILoR$set("public", "summary", function(){
     
     cat("===============================\n")
     
+    AIC <- -2*private$fitting_result$logLik + 2*length(unlist(self$coefficients))
+    BIC <- -2*private$fitting_result$logLik + 
+        log(length(self$n_B))*length(unlist(self$coefficients))
+    
+    cat("AIC: ", AIC, "\n")
+    cat("BIC: ", BIC, "\n\n")
+    
     cat("Number of iterations: ", private$fitting_result$ite, "\n")
 })
