@@ -1,7 +1,8 @@
+library(ModelMetrics)
 source("~/github/HILoR/src/HILoR.R")
 
 
-n_B <- 50
+n_B <- 1000
 n_I <- 4
 
 beta <- list(beta1 = c(-4,-2,0, 0, 1),
@@ -16,36 +17,31 @@ names(beta[[4]]) <- c("intercept", paste0("X", c(6,7,8)))
 
 type <- 1
 
-data <- HILoR$new(n_B, n_I)
-data$generate(beta, type = type)
-
-
-
 # split the data into training set and testing set
 prop <- c(0.7, 0.3) # training, test
 
 n_train <- round(n_B * prop[1], digits = 0)
 n_test <- n_B - n_train
-ind <- sample(n_B, n_B, replace = FALSE)
 
-train <- data$clone()
-test <- data$clone()
-train$bag_label<- data$bag_label[ind[1:n_train]]
-train$X <- lapply(data$X, function(x) x[ind[1:n_train],])
-train$n_B <- n_train
-test$bag_label<- data$bag_label[ind[(n_train+1):n_B]]
-test$X <- lapply(data$X, function(x) x[ind[(n_train+1):n_B],])
-test$n_B <- n_test
+train <- HILoR$new(n_train, n_I)
+train$generate(beta, type = type, seed = 2023)
 
-if(!is.null(data$ins_label)){
-    train$ins_label<- data$ins_label[ind[1:n_train],]
-    test$ins_label<- data$ins_label[ind[(n_train+1):n_B],]
-}
+test <- HILoR$new(n_test, n_I)
+test$generate(beta, type = type, seed = 2024)
+
 
 # fit an HILoR model tow the training set
 train$fit()
 
+# Summary of the fitted model
+train$summary()
+cat("\n")
 # prediction for the testing set using the fitted model
-train$predict(test$X)
+pred <- train$predict(test$X)
+bag_auc <- auc(test$bag_label, pred$bag_prob)
+cat("Bag prediction AUC: ", round(bag_auc, 4), "\n")
+ins_auc <- auc(as.vector(test$ins_label), as.vector(pred$ins_prob))
+cat("Instance prediction AUC: ", round(ins_auc, 4), "\n")
+
 
 

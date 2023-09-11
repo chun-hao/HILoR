@@ -1,5 +1,6 @@
 library(R6)
 library(tidyverse)
+library(data.table)
 
 rm(list = ls())
 
@@ -11,7 +12,7 @@ HILoR <- R6Class("HILoR", list(
     var_names = NULL,
     ins_label = NULL,
     type = NA,
-    fitted_model = NULL,
+    coefficients = NULL,
     initialize = function(n_B, n_I) {
         self$n_B <- n_B
         self$n_I <- n_I
@@ -30,6 +31,8 @@ HILoR <- R6Class("HILoR", list(
         invisible(self)
     }
 ))
+
+HILoR$set("private", "fitting_result", NULL)
 
 
 HILoR$set("public", "inputData", function(bag_label, X, type) {
@@ -113,17 +116,17 @@ HILoR$set("public", "generate", function(beta, type = 1, seed = 1234){
 })
 
 
-HILoR$set("public", "predict", function(X, thres = 0.5){
-    stopifnot("Fit the model first!" = !is.null(self$fitted_model))
+HILoR$set("public", "predict", function(newX, thres = 0.5){
+    stopifnot("Fit the model first!" = !is.null(self$coefficients))
     
-    n_test <- nrow(X[[1]])
+    n_new <- nrow(newX[[1]])
     
-    ins_prob <- matrix(0, nrow = n_test, ncol = self$n_I) # prob of an instance being positive
+    ins_prob <- matrix(0, nrow = n_new, ncol = self$n_I) # prob of an instance being positive
     for(i in 1:self$n_I){
-        p <- exp(cbind(1,X[[i]]) %*% beta[[i]])
+        p <- exp(cbind(1,newX[[i]]) %*% self$coefficients[[i]])
         ins_prob[,i] <- p/(1+p)
     }
-    ins_pred <- as.integer(ins_prob > thres)
+    ins_pred <- (ins_prob > thres) * 1
     
     if(type == 1){
         bag_prob <- apply(ins_prob, 1, function(x) 1-prod(1-x))
