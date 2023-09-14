@@ -34,7 +34,6 @@ HILoR <- R6Class("HILoR", list(
 
 HILoR$set("private", "fitting_result", NULL)
 
-
 HILoR$set("public", "inputData", function(bag_label, X, type) {
     stopifnot(is.null(dim(bag_label)), 
               "lenght of bag_label must equal to n_B" = length(bag_label) == self$n_B)
@@ -114,7 +113,6 @@ HILoR$set("public", "generate", function(beta, type = 1, seed = 1234){
     } 
 
 })
-
 
 HILoR$set("public", "predict", function(newX, thres = 0.5){
     stopifnot("Fit the model first!" = !is.null(self$coefficients))
