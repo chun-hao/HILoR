@@ -13,6 +13,8 @@ HILoR <- R6Class("HILoR", list(
     ins_label = NULL,
     type = NA,
     coefficients = NULL,
+    pval = NULL,
+    fitting_result = NULL,
     initialize = function(n_B, n_I) {
         self$n_B <- n_B
         self$n_I <- n_I
@@ -32,7 +34,6 @@ HILoR <- R6Class("HILoR", list(
     }
 ))
 
-HILoR$set("private", "fitting_result", NULL)
 
 HILoR$set("public", "inputData", function(bag_label, X, type) {
     stopifnot(is.null(dim(bag_label)), 
@@ -55,9 +56,10 @@ HILoR$set("public", "toLR", function() {
     
     out <- self$X[[1]]
     for(i in 2:n_I){
-        out <- merge(out, self$X[[i]])
+        out <- cbind(out, self$X[[i]])
     }
-    return(list(y = self$bag_label, X = out))
+    out <- out[, !duplicated(colnames(out))]
+    return(as.data.frame(cbind(Y = self$bag_label, out)))
 })
 
 HILoR$set("public", "toMILR", function(){
@@ -126,9 +128,9 @@ HILoR$set("public", "predict", function(newX, thres = 0.5){
     }
     ins_pred <- (ins_prob > thres) * 1
     
-    if(type == 1){
+    if(self$type == 1){
         bag_prob <- apply(ins_prob, 1, function(x) 1-prod(1-x))
-    } else if(type == 2){
+    } else if(self$type == 2){
         bag_prob <- apply(ins_prob, 1, function(x) 1-(1+sum(x/(1-x)))*prod(1-x))
     } 
     bag_pred <- as.integer(bag_prob > thres)

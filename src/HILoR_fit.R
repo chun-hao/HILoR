@@ -144,7 +144,7 @@ HILoR$set("public", "fit", function(lambda = 0, maxite = 2000, tol = 10^-6, type
     sig <- ifelse(pv<.01, "**", ifelse(pv<.05, "*", ""))
     OUT <- data.frame(beta_vec, se=vv, z=round(beta_vec/vv, digits=4), pvalue=pv, sig=sig)
     
-    private$fitting_result <- list(beta=beta, se=vv, pv=pv, 
+    self$fitting_result <- list(beta=beta, se=vv, pv=pv, 
                                    test.table=OUT, EP=oo$EP, logLik= oo$logLik, ite=oo$ite)
 })
 
